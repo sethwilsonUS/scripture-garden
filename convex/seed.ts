@@ -1,0 +1,544 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
+import { requireAdminSecret } from "./model";
+import { ruthWebSeed } from "./seedData/ruthWeb";
+
+const RUTH_BOOK = {
+  canonKey: "ruth",
+  osisId: "Ruth",
+  displayName: "Ruth",
+  chapterCount: 4,
+  curatedScope: "full" as const,
+  sortOrder: 8,
+};
+
+const chapterPassages = [
+  ["ruth-1", "Ruth 1", "Ruth, Naomi, and Orpah move through loss and return.", 1, 1, 22],
+  ["ruth-2", "Ruth 2", "Ruth gleans in Boaz's field and is met with protection.", 2, 1, 23],
+  ["ruth-3", "Ruth 3", "Naomi sends Ruth to the threshing floor with a careful request.", 3, 1, 18],
+  ["ruth-4", "Ruth 4", "Boaz redeems the family line, and Ruth's story opens toward David.", 4, 1, 22],
+] as const;
+
+const sectionPassages = [
+  ["ruth-1-1-5", "Famine and Loss", "A Bethlehem family leaves for Moab, where grief narrows Naomi's world.", 1, 1, 5],
+  ["ruth-1-16-17", "Ruth Clings to Naomi", "Ruth binds her path to Naomi with language of people, place, and God.", 1, 16, 17],
+  ["ruth-2-1-13", "Ruth Meets Boaz", "Ruth enters Boaz's field and receives unexpected protection.", 2, 1, 13],
+  ["ruth-2-14-23", "Provision in the Field", "Boaz's generosity and Naomi's recognition turn gleaning into a path of hope.", 2, 14, 23],
+  ["ruth-3-1-13", "At the Threshing Floor", "Ruth asks Boaz to act as redeemer, and Boaz answers with care.", 3, 1, 13],
+  ["ruth-4-1-12", "Redemption at the Gate", "Boaz completes the public act of redemption at Bethlehem's gate.", 4, 1, 12],
+  ["ruth-4-13-22", "A Line Toward David", "Ruth and Boaz become part of the family line that leads toward David.", 4, 13, 22],
+] as const;
+
+const nodeSeeds = [
+  {
+    slug: "ruth",
+    nodeType: "person",
+    displayName: "Ruth",
+    shortLabel: "Ruth",
+    summary:
+      "A Moabite widow who binds herself to Naomi and becomes central to the story's movement from loss toward provision.",
+    displayOrder: 10,
+  },
+  {
+    slug: "naomi",
+    nodeType: "person",
+    displayName: "Naomi",
+    shortLabel: "Naomi",
+    summary:
+      "Ruth's mother-in-law, whose grief and return to Bethlehem shape the opening path of the book.",
+    displayOrder: 20,
+  },
+  {
+    slug: "boaz",
+    nodeType: "person",
+    displayName: "Boaz",
+    shortLabel: "Boaz",
+    summary:
+      "A Bethlehem landowner and near kinsman who protects Ruth and acts publicly to redeem Naomi's family line.",
+    displayOrder: 30,
+  },
+  {
+    slug: "orpah",
+    nodeType: "person",
+    displayName: "Orpah",
+    shortLabel: "Orpah",
+    summary:
+      "Naomi's daughter-in-law who turns back to Moab after Naomi urges both women to return home.",
+    displayOrder: 40,
+  },
+  {
+    slug: "bethlehem",
+    nodeType: "place",
+    displayName: "Bethlehem",
+    shortLabel: "Bethlehem",
+    summary:
+      "The Judahite town Naomi leaves in famine and returns to at the beginning of barley harvest.",
+    displayOrder: 50,
+  },
+  {
+    slug: "moab",
+    nodeType: "place",
+    displayName: "Moab",
+    shortLabel: "Moab",
+    summary:
+      "The country where Naomi's family sojourns and where Ruth enters the story as a Moabite widow.",
+    displayOrder: 60,
+  },
+  {
+    slug: "gleaning",
+    nodeType: "thing_practice",
+    displayName: "Gleaning",
+    shortLabel: "Gleaning",
+    summary:
+      "The harvest practice Ruth uses to seek food and favor in Boaz's field.",
+    displayOrder: 70,
+  },
+  {
+    slug: "threshing-floor",
+    nodeType: "thing_practice",
+    displayName: "Threshing Floor",
+    shortLabel: "Threshing floor",
+    summary:
+      "The nighttime setting where Ruth asks Boaz to spread his garment over her as a redeemer.",
+    displayOrder: 80,
+  },
+  {
+    slug: "redemption-custom",
+    nodeType: "thing_practice",
+    displayName: "Redemption Custom",
+    shortLabel: "Redemption",
+    summary:
+      "The public family obligation Boaz takes up at the city gate in Ruth 4.",
+    displayOrder: 90,
+  },
+  {
+    slug: "return",
+    nodeType: "theme_motif",
+    displayName: "Return",
+    shortLabel: "Return",
+    summary:
+      "A repeated movement in Ruth 1 that traces Naomi's grief and Ruth's chosen loyalty.",
+    displayOrder: 100,
+  },
+  {
+    slug: "gleaning-law-stub",
+    nodeType: "external_stub",
+    displayName: "Gleaning Laws",
+    shortLabel: "Gleaning laws",
+    summary:
+      "A bounded doorway to the Torah background for leaving harvest edges for the vulnerable.",
+    externalReference: "Leviticus 19:9-10; Deuteronomy 24:19-22",
+    boundaryNote:
+      "This is outside fully curated Ruth territory and is included only as a reference-first stub.",
+    displayOrder: 110,
+  },
+  {
+    slug: "david-lineage-stub",
+    nodeType: "external_stub",
+    displayName: "Line Toward David",
+    shortLabel: "Line toward David",
+    summary:
+      "A bounded doorway to the genealogy at the end of Ruth that points toward David.",
+    externalReference: "Ruth 4:17-22",
+    boundaryNote:
+      "This stub stays tied to Ruth's closing genealogy rather than opening a whole-Bible lineage graph.",
+    displayOrder: 120,
+  },
+  {
+    slug: "matthew-genealogy-stub",
+    nodeType: "external_stub",
+    displayName: "Matthew's Genealogy",
+    shortLabel: "Matthew 1",
+    summary:
+      "A bounded doorway to the later genealogy where Ruth and Boaz are named in Matthew 1.",
+    externalReference: "Matthew 1:5-6",
+    boundaryNote:
+      "This cross-book stub is reference-first and does not imply curated coverage of Matthew.",
+    displayOrder: 130,
+  },
+] as const;
+
+const anchorSeeds = [
+  ["ruth", "ruth-1-16-17", "primary", "Ruth's commitment", "ruth.1.16", "ruth.1.17", 10],
+  ["ruth", "ruth-2-1-13", "primary", "Ruth enters Boaz's field", "ruth.2.2", "ruth.2.13", 20],
+  ["ruth", "ruth-3-1-13", "primary", "Ruth at the threshing floor", "ruth.3.6", "ruth.3.13", 30],
+  ["ruth", "ruth-4-13-22", "primary", "Ruth in the family line", "ruth.4.13", "ruth.4.17", 40],
+  ["naomi", "ruth-1-1-5", "primary", "Naomi's loss", "ruth.1.2", "ruth.1.5", 10],
+  ["naomi", "ruth-1-16-17", "primary", "Ruth clings to Naomi", "ruth.1.16", "ruth.1.17", 20],
+  ["boaz", "ruth-2-1-13", "primary", "Boaz meets Ruth", "ruth.2.1", "ruth.2.13", 10],
+  ["boaz", "ruth-4-1-12", "primary", "Boaz redeems at the gate", "ruth.4.1", "ruth.4.12", 20],
+  ["orpah", "ruth-1-16-17", "mention", "Orpah turns back", "ruth.1.14", "ruth.1.15", 10],
+  ["bethlehem", "ruth-1", "primary", "Return to Bethlehem", "ruth.1.19", "ruth.1.22", 10],
+  ["bethlehem", "ruth-4-1-12", "context", "Public gate scene", "ruth.4.1", "ruth.4.12", 20],
+  ["moab", "ruth-1-1-5", "primary", "Sojourn in Moab", "ruth.1.1", "ruth.1.5", 10],
+  ["gleaning", "ruth-2-1-13", "primary", "Ruth asks to glean", "ruth.2.2", "ruth.2.3", 10],
+  ["gleaning", "ruth-2-14-23", "context", "Provision through gleaning", "ruth.2.15", "ruth.2.23", 20],
+  ["threshing-floor", "ruth-3-1-13", "primary", "Threshing floor request", "ruth.3.6", "ruth.3.13", 10],
+  ["redemption-custom", "ruth-4-1-12", "primary", "Redeemer at the gate", "ruth.4.1", "ruth.4.12", 10],
+  ["return", "ruth-1", "primary", "Returning from Moab", "ruth.1.6", "ruth.1.22", 10],
+  ["gleaning-law-stub", "ruth-2-1-13", "background", "Law behind the field edge", "ruth.2.2", "ruth.2.3", 10],
+  ["david-lineage-stub", "ruth-4-13-22", "background", "Genealogy toward David", "ruth.4.17", "ruth.4.22", 10],
+  ["matthew-genealogy-stub", "ruth-4-13-22", "background", "Ruth and Boaz named later", "ruth.4.17", "ruth.4.22", 20],
+] as const;
+
+const relationshipSeeds = [
+  ["ruth", "naomi", "associated_with", "textual", "clings to", "Ruth 1:16-17 directly records Ruth binding her path to Naomi.", "ruth-1-16-17", undefined, 10],
+  ["ruth", "moab", "movement", "contextual", "comes from", "Ruth is repeatedly identified as the Moabitess who returns with Naomi.", "ruth-1-1-5", undefined, 20],
+  ["naomi", "bethlehem", "movement", "contextual", "returns to", "Naomi returns to Bethlehem as the barley harvest begins.", "ruth-1", undefined, 30],
+  ["ruth", "boaz", "associated_with", "contextual", "meets in the field of", "Ruth 2 brings Ruth into Boaz's field and protection.", "ruth-2-1-13", undefined, 40],
+  ["ruth", "gleaning", "associated_with", "contextual", "seeks provision through", "Ruth asks to glean among the ears of grain in Ruth 2.", "ruth-2-1-13", undefined, 50],
+  ["gleaning", "gleaning-law-stub", "cross_book_stub_link", "editorial", "opens the law behind gleaning", "This editorial doorway keeps Ruth's field scene tied to its Torah background without expanding into a full law index.", "ruth-2-1-13", undefined, 60],
+  ["ruth", "threshing-floor", "associated_with", "contextual", "goes to", "Ruth 3 places Ruth at the threshing floor for a carefully bounded request.", "ruth-3-1-13", undefined, 70],
+  ["boaz", "redemption-custom", "associated_with", "textual", "acts as redeemer through", "Ruth 4 explicitly shows Boaz taking up the redeemer role at the gate.", "ruth-4-1-12", undefined, 80],
+  ["redemption-custom", "david-lineage-stub", "cross_book_stub_link", "editorial", "opens toward David's line", "Ruth 4's redemption scene leads directly into the genealogy ending with David.", "ruth-4-13-22", undefined, 90],
+  ["david-lineage-stub", "matthew-genealogy-stub", "cross_book_stub_link", "editorial", "is echoed in", "Matthew 1 later names Boaz and Ruth in a genealogy; this is a bounded reference, not curated Matthew coverage.", "ruth-4-13-22", undefined, 100],
+  ["boaz", "bethlehem", "located_in", "textual", "acts in", "Boaz's public redemption occurs in Bethlehem's gate scene.", "ruth-4-1-12", undefined, 110],
+  ["ruth", "return", "thematic_resonance", "editorial", "embodies return with loyalty", "The repeated language of returning in Ruth 1 is given a human center in Ruth's decision to stay with Naomi.", "ruth-1", undefined, 120],
+] as const;
+
+async function getByIndex<T extends string>(
+  ctx: { db: any },
+  table: T,
+  indexName: string,
+  fieldName: string,
+  value: string,
+) {
+  return await ctx.db
+    .query(table)
+    .withIndex(indexName, (q: any) => q.eq(fieldName, value))
+    .first();
+}
+
+async function getVerseByKey(ctx: { db: any }, verseKey: string) {
+  const verse = await getByIndex(ctx, "verses", "by_verseKey", "verseKey", verseKey);
+  if (!verse) {
+    throw new Error(`Missing verse ${verseKey}`);
+  }
+  return verse;
+}
+
+async function getPassageBySlug(ctx: { db: any }, slug: string) {
+  const passage = await getByIndex(ctx, "passages", "by_slug", "slug", slug);
+  if (!passage) {
+    throw new Error(`Missing passage ${slug}`);
+  }
+  return passage;
+}
+
+async function getNodeBySlug(ctx: { db: any }, slug: string) {
+  const node = await getByIndex(ctx, "nodes", "by_slug", "slug", slug);
+  if (!node) {
+    throw new Error(`Missing node ${slug}`);
+  }
+  return node;
+}
+
+export const status = query({
+  args: {},
+  handler: async (ctx) => {
+    return await collectSeedStatus(ctx);
+  },
+});
+
+async function collectSeedStatus(ctx: { db: any }) {
+  const translations = await ctx.db.query("translations").collect();
+  const books = await ctx.db.query("books").collect();
+  const verses = await ctx.db.query("verses").collect();
+  const verseTexts = await ctx.db.query("verseTexts").collect();
+  const passages = await ctx.db.query("passages").collect();
+  const nodes = await ctx.db.query("nodes").collect();
+  const relationships = await ctx.db.query("relationships").collect();
+  const approvals = await ctx.db.query("relationshipApprovals").collect();
+
+  return {
+    translations: translations.length,
+    books: books.length,
+    verses: verses.length,
+    verseTexts: verseTexts.length,
+    passages: passages.length,
+    nodes: nodes.length,
+    relationships: relationships.length,
+    approvals: approvals.length,
+  };
+}
+
+export const seedRuthMvp = mutation({
+  args: {
+    adminSecret: v.string(),
+  },
+  handler: async (ctx, args) => {
+    requireAdminSecret(args.adminSecret);
+    const now = Date.now();
+
+    let adminUser = await getByIndex(
+      ctx,
+      "adminUsers",
+      "by_authSubject",
+      "authSubject",
+      "system:initial-seed",
+    );
+
+    if (!adminUser) {
+      const adminUserId = await ctx.db.insert("adminUsers", {
+        authSubject: "system:initial-seed",
+        email: "seed@scripture-garden.local",
+        displayName: "Initial Seed Approval",
+        role: "admin",
+        status: "active",
+        createdAt: now,
+      });
+      adminUser = await ctx.db.get(adminUserId);
+    }
+
+    let translation = await getByIndex(ctx, "translations", "by_key", "key", "WEB");
+    if (!translation) {
+      const translationId = await ctx.db.insert("translations", {
+        ...ruthWebSeed.translation,
+        sourceVersion: ruthWebSeed.importedAt,
+        importedAt: Date.parse(ruthWebSeed.importedAt),
+      });
+      translation = await ctx.db.get(translationId);
+    }
+
+    let book = await getByIndex(ctx, "books", "by_canonKey", "canonKey", "ruth");
+    if (!book) {
+      const bookId = await ctx.db.insert("books", RUTH_BOOK);
+      book = await ctx.db.get(bookId);
+    }
+
+    for (const seedVerse of ruthWebSeed.verses) {
+      let verse = await getByIndex(
+        ctx,
+        "verses",
+        "by_verseKey",
+        "verseKey",
+        seedVerse.verseKey,
+      );
+
+      if (!verse) {
+        const verseId = await ctx.db.insert("verses", {
+          verseKey: seedVerse.verseKey,
+          osisRef: seedVerse.osisRef,
+          bookId: book!._id,
+          chapterNumber: seedVerse.chapterNumber,
+          verseNumber: seedVerse.verseNumber,
+        });
+        verse = await ctx.db.get(verseId);
+      }
+
+      const existingText = await ctx.db
+        .query("verseTexts")
+        .withIndex("by_verse_translation", (q: any) =>
+          q.eq("verseId", verse!._id).eq("translationId", translation!._id),
+        )
+        .first();
+
+      if (!existingText) {
+        await ctx.db.insert("verseTexts", {
+          verseId: verse!._id,
+          translationId: translation!._id,
+          text: seedVerse.text,
+          textVersion: ruthWebSeed.importedAt,
+          licenseSnapshot: ruthWebSeed.translation.licenseNote,
+          checksum: `${seedVerse.osisRef}:${seedVerse.text.length}`,
+          status: "active",
+        });
+      }
+    }
+
+    let passageOrder = 10;
+    for (const [slug, title, summary, chapter, startVerse, endVerse] of [
+      ...chapterPassages,
+      ...sectionPassages,
+    ]) {
+      const existing = await getByIndex(ctx, "passages", "by_slug", "slug", slug);
+      if (existing) {
+        continue;
+      }
+
+      await ctx.db.insert("passages", {
+        slug,
+        title,
+        summary,
+        kind: slug === `ruth-${chapter}` ? "chapter" : "section",
+        bookId: book!._id,
+        startVerseId: (await getVerseByKey(ctx, `ruth.${chapter}.${startVerse}`))._id,
+        endVerseId: (await getVerseByKey(ctx, `ruth.${chapter}.${endVerse}`))._id,
+        chapterNumber: chapter,
+        status: "published",
+        publishedAt: now,
+        sortOrder: passageOrder,
+      });
+      passageOrder += 10;
+    }
+
+    for (const seedNode of nodeSeeds) {
+      let node = await getByIndex(ctx, "nodes", "by_slug", "slug", seedNode.slug);
+      if (!node) {
+        const nodeId = await ctx.db.insert("nodes", {
+          ...seedNode,
+          status: "published",
+          isPublic: true,
+          publishedAt: now,
+          createdAt: now,
+          updatedAt: now,
+          createdByAdminUserId: adminUser!._id,
+        });
+        node = await ctx.db.get(nodeId);
+      }
+
+      const primaryAlias = await ctx.db
+        .query("nodeAliases")
+        .withIndex("by_primaryAlias", (q: any) =>
+          q.eq("nodeId", node!._id).eq("locale", "en-US").eq("isPrimary", true),
+        )
+        .first();
+
+      if (!primaryAlias) {
+        await ctx.db.insert("nodeAliases", {
+          nodeId: node!._id,
+          alias: seedNode.displayName,
+          normalizedAlias: seedNode.displayName.toLowerCase(),
+          locale: "en-US",
+          aliasType: "display",
+          isPrimary: true,
+        });
+      }
+    }
+
+    for (const [
+      nodeSlug,
+      passageSlug,
+      kind,
+      displayLabel,
+      startVerseKey,
+      endVerseKey,
+      displayOrder,
+    ] of anchorSeeds) {
+      const node = await getNodeBySlug(ctx, nodeSlug);
+      const passage = await getPassageBySlug(ctx, passageSlug);
+      const existing = await ctx.db
+        .query("nodePassageAnchors")
+        .withIndex("by_node_passage", (q: any) =>
+          q.eq("nodeId", node._id).eq("passageId", passage._id),
+        )
+        .first();
+
+      if (!existing) {
+        await ctx.db.insert("nodePassageAnchors", {
+          nodeId: node._id,
+          passageId: passage._id,
+          startVerseId: (await getVerseByKey(ctx, startVerseKey))._id,
+          endVerseId: (await getVerseByKey(ctx, endVerseKey))._id,
+          anchorKind: kind,
+          displayLabel,
+          strength: 4,
+          displayOrder,
+        });
+      }
+    }
+
+    for (const [
+      sourceSlug,
+      targetSlug,
+      relationshipType,
+      evidence,
+      label,
+      rationale,
+      sourcePassageSlug,
+      targetPassageSlug,
+      displayOrder,
+    ] of relationshipSeeds) {
+      const sourceNode = await getNodeBySlug(ctx, sourceSlug);
+      const targetNode = await getNodeBySlug(ctx, targetSlug);
+      const existing = await ctx.db
+        .query("relationships")
+        .withIndex("by_source", (q: any) => q.eq("sourceNodeId", sourceNode._id))
+        .filter((q: any) =>
+          q.and(
+            q.eq(q.field("targetNodeId"), targetNode._id),
+            q.eq(q.field("relationshipTypeKey"), relationshipType),
+          ),
+        )
+        .first();
+
+      if (existing) {
+        continue;
+      }
+
+      const relationshipId = await ctx.db.insert("relationships", {
+        sourceNodeId: sourceNode._id,
+        targetNodeId: targetNode._id,
+        relationshipTypeKey: relationshipType,
+        evidenceClass: evidence,
+        publicLabel: label,
+        rationale,
+        sourcePassageId: sourcePassageSlug
+          ? (await getPassageBySlug(ctx, sourcePassageSlug))._id
+          : undefined,
+        targetPassageId: targetPassageSlug
+          ? (await getPassageBySlug(ctx, targetPassageSlug))._id
+          : undefined,
+        approvalStatus: "approved",
+        isPublic: false,
+        createdAt: now,
+        updatedAt: now,
+        displayOrder,
+      });
+
+      const approvalId = await ctx.db.insert("relationshipApprovals", {
+        relationshipId,
+        decision: "approved",
+        decidedByAdminUserId: adminUser!._id,
+        decidedAt: now,
+        rationale: "Initial conservative seed approved by the project owner.",
+        evidenceSummary: rationale,
+        version: 1,
+      });
+
+      await ctx.db.patch(relationshipId, {
+        approvalStatus: "published",
+        currentApprovalId: approvalId,
+        isPublic: true,
+        publishedAt: now,
+      });
+    }
+
+    const existingSuggestion = await ctx.db
+      .query("aiSuggestions")
+      .withIndex("by_reviewStatus", (q: any) => q.eq("reviewStatus", "suggested"))
+      .first();
+
+    if (!existingSuggestion) {
+      await ctx.db.insert("aiSuggestions", {
+        suggestionType: "relationship",
+        targetTable: "relationships",
+        candidatePayloadJson: JSON.stringify({
+          sourceNodeSlug: "ruth",
+          targetNodeSlug: "return",
+          note: "Seed example only. AI suggestions remain internal.",
+        }),
+        modelProvider: "seed",
+        modelName: "manual-placeholder",
+        promptVersion: "seed-v1",
+        sourceRefKeys: ["ruth.1.6", "ruth.1.16", "ruth.1.22"],
+        reviewStatus: "suggested",
+        publishBlocked: true,
+        createdAt: now,
+      });
+    }
+
+    await ctx.db.insert("auditLog", {
+      actorType: "system",
+      actorAdminUserId: adminUser!._id,
+      action: "seed_ruth_mvp",
+      targetTable: "books",
+      targetId: book!._id,
+      afterJson: JSON.stringify(await collectSeedStatus(ctx)),
+      occurredAt: now,
+    });
+
+    return await collectSeedStatus(ctx);
+  },
+});
