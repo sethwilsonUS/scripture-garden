@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     "A Ruth-first semantic Scripture exploration environment built for calm, accessible traversal.",
   applicationName: "Scripture Garden",
   authors: [{ name: "Seth Wilson" }],
-  metadataBase: new URL("https://scripturegarden.local"),
+  metadataBase: new URL("https://scripture-garden-liard.vercel.app"),
 };
 
 export const viewport: Viewport = {
@@ -68,6 +68,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
       className={`${fraunces.variable} ${dmSans.variable} ${jetbrainsMono.variable}`}
     >

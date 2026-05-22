@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { GardenCard } from "@/components/ui/garden-card";
 import { StatusBanner } from "@/components/ui/status-banner";
 
@@ -23,10 +24,13 @@ export default function Home() {
             passages.
           </p>
           <div className="hero-actions" aria-label="Primary page links">
-            <a className="btn-primary" href="#ruth-preview">
+            <Link className="btn-primary" href="/ruth/1">
               Begin with Ruth
               <ArrowRight aria-hidden="true" className="size-4" />
-            </a>
+            </Link>
+            <Link className="btn-secondary" href="/ruth">
+              Ruth overview
+            </Link>
             <a className="btn-secondary" href="#source">
               Source posture
             </a>
@@ -34,13 +38,13 @@ export default function Home() {
         </div>
 
         <aside className="garden-bed reader-preview" aria-labelledby="preview-title">
-          <p className="reader-preview__meta">Phase 1 shell</p>
+          <p className="reader-preview__meta">Ruth reader live</p>
           <h2 id="preview-title" className="reader-preview__title">
-            The path starts small on purpose.
+            The path starts in the text.
           </h2>
           <p className="reader-preview__text">
-            This foundation sets the page structure, theme, and accessibility
-            primitives that the Ruth reader will inherit in the next phases.
+            Ruth 1-4 now render from World English Bible data, with a small
+            approved semantic layer ready for careful traversal.
           </p>
         </aside>
       </section>
@@ -103,17 +107,16 @@ export default function Home() {
               Scripture text is not mocked here.
             </h2>
             <p className="section-copy">
-              The WEB corpus import and attribution belong to Phase 2, so this
-              shell avoids presenting placeholder verse text as if it were the
-              real reader.
+              The reader uses the World English Bible, public domain, imported
+              from eBible.org. Scripture text is stored separately from semantic
+              overlays and editorial approvals.
             </p>
           </div>
 
           <StatusBanner title="Foundation shell ready for corpus work">
             <p>
-              Next up: load Ruth from the World English Bible, keep verse text
-              separate from semantic overlays, and show attribution in the
-              public experience.
+              Ruth is seeded from WEB data. Next up in the interface: continue
+              tightening the public traversal and editorial workbench.
             </p>
           </StatusBanner>
         </section>

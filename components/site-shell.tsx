@@ -3,9 +3,9 @@ import { BookOpenText, Leaf } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const navItems = [
-  { href: "#ruth-preview", label: "Ruth" },
-  { href: "#foundation", label: "Foundation" },
-  { href: "#source", label: "Source" },
+  { href: "/ruth", label: "Ruth" },
+  { href: "/ruth/1", label: "Read" },
+  { href: "/admin", label: "Workbench" },
 ];
 
 export function SiteShell({ children }: { children: React.ReactNode }) {
@@ -26,9 +26,9 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
 
           <nav className="site-nav" aria-label="Main navigation">
             {navItems.map((item) => (
-              <a key={item.href} href={item.href} className="site-nav__link">
+              <Link key={item.href} href={item.href} className="site-nav__link">
                 {item.label}
-              </a>
+              </Link>
             ))}
           </nav>
 
@@ -49,8 +49,9 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
             <span>Ruth-first, editorially approved, small on purpose.</span>
           </div>
           <p>
-            Scripture text import and WEB attribution arrive in Phase 2. No
-            public AI, generic search, or whole-Bible graph is active here.
+            Scripture text is from the World English Bible, public domain,
+            imported from eBible.org. No public AI, generic search, or
+            whole-Bible graph is active here.
           </p>
         </div>
       </footer>
