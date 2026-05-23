@@ -7,54 +7,20 @@ import { recordClientEvent } from "@/components/analytics/track-event";
 import { DetailPanel } from "@/components/reader/detail-panel";
 import type {
   NodeDetailData,
-  PublicAnchor,
+  PublicTextLink,
   ReaderChapterData,
 } from "@/components/reader/types";
-
-type OverlayDensity = "focused" | "full" | "hidden";
+import {
+  type OverlayDensity,
+  resolveTextSegments,
+  visibleNoteAnchorsForVerse,
+} from "@/components/reader/text-link-segments";
 
 const densityOptions = [
   { value: "focused", label: "Quiet" },
   { value: "full", label: "All paths" },
   { value: "hidden", label: "Text only" },
 ] as const;
-
-function verseNumberFromKey(verseKey: string | null) {
-  if (!verseKey) {
-    return null;
-  }
-
-  const [, , verse] = verseKey.split(".");
-  return Number(verse);
-}
-
-function anchorTouchesVerse(anchor: PublicAnchor, verseNumber: number) {
-  const start = verseNumberFromKey(anchor.startVerseKey);
-  const end = verseNumberFromKey(anchor.endVerseKey);
-
-  if (!start || !end) {
-    return false;
-  }
-
-  return verseNumber >= start && verseNumber <= end;
-}
-
-function visibleAnchorsForDensity(
-  anchors: PublicAnchor[],
-  density: OverlayDensity,
-) {
-  if (density === "hidden") {
-    return [];
-  }
-
-  if (density === "full") {
-    return anchors;
-  }
-
-  return anchors.filter((anchor) =>
-    ["primary", "context"].includes(anchor.anchorKind),
-  );
-}
 
 function recordOverlayChange(density: OverlayDensity, chapterNumber: number) {
   recordClientEvent({
@@ -80,18 +46,18 @@ export function ReaderChapter({
     );
   }, [data.chapter.number]);
 
-  const anchorsByVerse = useMemo(() => {
-    const visibleAnchors = visibleAnchorsForDensity(data.anchors, density);
+  const textLinksByVerse = useMemo(() => {
+    const grouped = new Map<string, PublicTextLink[]>();
 
-    return new Map(
-      data.verses.map((verse) => [
-        verse.verseNumber,
-        visibleAnchors.filter((anchor) =>
-          anchorTouchesVerse(anchor, verse.verseNumber),
-        ),
-      ]),
-    );
-  }, [data.anchors, data.verses, density]);
+    for (const textLink of data.textLinks) {
+      grouped.set(textLink.verseKey, [
+        ...(grouped.get(textLink.verseKey) ?? []),
+        textLink,
+      ]);
+    }
+
+    return grouped;
+  }, [data.textLinks]);
 
   return (
     <div className="reader-layout">
@@ -156,7 +122,16 @@ export function ReaderChapter({
 
         <div className="scripture-text" aria-label={`Ruth ${data.chapter.number} text`}>
           {data.verses.map((verse) => {
-            const anchors = anchorsByVerse.get(verse.verseNumber) ?? [];
+            const textSegments = resolveTextSegments({
+              text: verse.text,
+              links: textLinksByVerse.get(verse.verseKey) ?? [],
+              density,
+            });
+            const noteAnchors = visibleNoteAnchorsForVerse({
+              anchors: data.anchors,
+              density,
+              verseKey: verse.verseKey,
+            });
 
             return (
               <section
@@ -169,20 +144,43 @@ export function ReaderChapter({
                   <span id={`${verse.verseKey}-label`} className="verse-number">
                     {verse.verseNumber}
                   </span>
-                  {verse.text}
+                  {textSegments.map((segment, index) => {
+                    if (segment.kind === "text") {
+                      return (
+                        <span key={`${verse.verseKey}-text-${index}`}>
+                          {segment.text}
+                        </span>
+                      );
+                    }
+
+                    const labelTarget =
+                      segment.link.contextLabel ?? segment.link.node.displayName;
+
+                    return (
+                      <Link
+                        key={segment.link._id}
+                        href={`/ruth/${data.chapter.number}?node=${segment.link.node.slug}#reader-detail`}
+                        className={`scripture-link scripture-link--${segment.link.node.nodeType}`}
+                        scroll={false}
+                        aria-label={`Open ${labelTarget} detail from "${segment.text}"`}
+                      >
+                        {segment.text}
+                      </Link>
+                    );
+                  })}
                 </p>
 
-                {anchors.length > 0 ? (
-                  <ul className="verse-paths" aria-label={`Garden paths from ${verse.osisRef}`}>
-                    {anchors.map((anchor) => (
+                {noteAnchors.length > 0 ? (
+                  <ul className="verse-notes" aria-label={`Garden notes from ${verse.osisRef}`}>
+                    {noteAnchors.map((anchor) => (
                       <li key={anchor._id}>
                         <Link
                           href={`/ruth/${data.chapter.number}?node=${anchor.node.slug}#reader-detail`}
-                          className={`entity-chip entity-chip--${anchor.node.nodeType}`}
+                          className={`garden-note-link garden-note-link--${anchor.node.nodeType}`}
                           scroll={false}
                         >
-                          <span>{anchor.node.shortLabel}</span>
-                          <small>{anchor.displayLabel}</small>
+                          <span>{anchor.displayLabel}</span>
+                          <small>{anchor.node.shortLabel}</small>
                         </Link>
                       </li>
                     ))}

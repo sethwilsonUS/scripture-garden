@@ -31,9 +31,24 @@ export type PublicAnchor = {
   _id: string;
   anchorKind: "primary" | "mention" | "context" | "background";
   displayLabel: string;
+  readerSurface: "detail_only" | "note";
   displayOrder: number;
   startVerseKey: string | null;
   endVerseKey: string | null;
+  passage: PublicPassage;
+  node: PublicNode;
+};
+
+export type PublicTextLink = {
+  _id: string;
+  anchorKind: PublicAnchor["anchorKind"];
+  displayLabel: string;
+  linkedText: string;
+  startOffset: number;
+  endOffset: number;
+  contextLabel: string | null;
+  displayOrder: number;
+  verseKey: string;
   passage: PublicPassage;
   node: PublicNode;
 };
@@ -89,6 +104,7 @@ export type ReaderChapterData = {
     text: string;
   }>;
   anchors: PublicAnchor[];
+  textLinks: PublicTextLink[];
   relationships: PublicRelationship[];
 };
 

@@ -5,10 +5,12 @@ import {
   anchorKind,
   evidenceClass,
   nodeType,
+  readerSurface,
   relationshipTypeKey,
   requireAdminSecret,
   workflowStatus,
 } from "./model";
+import { resolveLinkedTextOffsets } from "./textLinks";
 
 async function getAdminUser(ctx: { db: any }) {
   const existing = await ctx.db
@@ -60,6 +62,36 @@ async function getBySlug(ctx: { db: any }, table: string, slug: string) {
     .query(table)
     .withIndex("by_slug", (q: any) => q.eq("slug", slug))
     .first();
+}
+
+async function getVerseByKey(ctx: { db: any }, verseKey: string) {
+  return await ctx.db
+    .query("verses")
+    .withIndex("by_verseKey", (q: any) => q.eq("verseKey", verseKey))
+    .first();
+}
+
+async function getWebTranslation(ctx: { db: any }) {
+  return await ctx.db
+    .query("translations")
+    .withIndex("by_key", (q: any) => q.eq("key", "WEB"))
+    .first();
+}
+
+function verseIsInPassage(verse: any, startVerse: any, endVerse: any) {
+  if (!verse || !startVerse || !endVerse) {
+    return false;
+  }
+
+  if (verse.bookId !== startVerse.bookId || verse.bookId !== endVerse.bookId) {
+    return false;
+  }
+
+  const versePosition = verse.chapterNumber * 1000 + verse.verseNumber;
+  const startPosition = startVerse.chapterNumber * 1000 + startVerse.verseNumber;
+  const endPosition = endVerse.chapterNumber * 1000 + endVerse.verseNumber;
+
+  return versePosition >= startPosition && versePosition <= endPosition;
 }
 
 export const listWorkbench = query({
@@ -186,6 +218,7 @@ export const createAnchor = mutation({
     passageSlug: v.string(),
     anchorKind,
     displayLabel: v.string(),
+    readerSurface: v.optional(readerSurface),
   },
   handler: async (ctx, args) => {
     requireAdminSecret(args.adminSecret);
@@ -204,6 +237,7 @@ export const createAnchor = mutation({
       endVerseId: passage.endVerseId,
       anchorKind: args.anchorKind,
       displayLabel: args.displayLabel,
+      readerSurface: args.readerSurface ?? "detail_only",
       strength: 3,
       displayOrder: Date.now(),
     });
@@ -217,6 +251,105 @@ export const createAnchor = mutation({
     });
 
     return anchorId;
+  },
+});
+
+export const createNodeTextLink = mutation({
+  args: {
+    adminSecret: v.string(),
+    nodeSlug: v.string(),
+    passageSlug: v.string(),
+    verseKey: v.string(),
+    linkedText: v.string(),
+    occurrenceNumber: v.optional(v.number()),
+    anchorKind,
+    displayLabel: v.string(),
+    contextLabel: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    requireAdminSecret(args.adminSecret);
+    const adminUser = await getAdminUser(ctx);
+    const [node, passage, verse, translation] = await Promise.all([
+      getBySlug(ctx, "nodes", args.nodeSlug),
+      getBySlug(ctx, "passages", args.passageSlug),
+      getVerseByKey(ctx, args.verseKey),
+      getWebTranslation(ctx),
+    ]);
+
+    if (!node || !passage || !verse || !translation) {
+      throw new Error("Node, passage, verse, and WEB translation are required.");
+    }
+
+    const [startVerse, endVerse, verseText] = await Promise.all([
+      ctx.db.get(passage.startVerseId),
+      ctx.db.get(passage.endVerseId),
+      ctx.db
+        .query("verseTexts")
+        .withIndex("by_verse_translation", (q: any) =>
+          q.eq("verseId", verse._id).eq("translationId", translation._id),
+        )
+        .first(),
+    ]);
+
+    if (!verseIsInPassage(verse, startVerse, endVerse)) {
+      throw new Error(`${args.verseKey} is not inside ${args.passageSlug}.`);
+    }
+
+    if (!verseText?.text) {
+      throw new Error(`WEB text was not found for ${args.verseKey}.`);
+    }
+
+    const offsets = resolveLinkedTextOffsets({
+      text: verseText.text,
+      linkedText: args.linkedText,
+      occurrenceNumber: args.occurrenceNumber ?? 1,
+    });
+
+    if (!offsets) {
+      throw new Error(
+        `Could not find occurrence ${args.occurrenceNumber ?? 1} of "${args.linkedText}" in ${args.verseKey}.`,
+      );
+    }
+
+    const existingLinks = await ctx.db
+      .query("nodeTextLinks")
+      .withIndex("by_node_verse", (q: any) =>
+        q.eq("nodeId", node._id).eq("verseId", verse._id),
+      )
+      .collect();
+
+    const duplicate = existingLinks.find(
+      (link: any) =>
+        link.startOffset === offsets.startOffset &&
+        link.endOffset === offsets.endOffset,
+    );
+
+    if (duplicate) {
+      throw new Error("This node already has an inline link at that span.");
+    }
+
+    const linkId = await ctx.db.insert("nodeTextLinks", {
+      nodeId: node._id,
+      passageId: passage._id,
+      verseId: verse._id,
+      anchorKind: args.anchorKind,
+      displayLabel: args.displayLabel,
+      linkedText: args.linkedText,
+      startOffset: offsets.startOffset,
+      endOffset: offsets.endOffset,
+      contextLabel: args.contextLabel || undefined,
+      displayOrder: Date.now(),
+    });
+
+    await audit(ctx, {
+      action: "create_node_text_link",
+      targetTable: "nodeTextLinks",
+      targetId: linkId,
+      actorAdminUserId: adminUser._id,
+      after: await ctx.db.get(linkId),
+    });
+
+    return linkId;
   },
 });
 

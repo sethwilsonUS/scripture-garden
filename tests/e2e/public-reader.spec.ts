@@ -12,7 +12,10 @@ test("reads Ruth, opens a detail panel, follows a relationship, and returns", as
   await expect(page).toHaveURL(/\/ruth\/1$/);
   await expect(page.getByRole("heading", { name: "Ruth 1" })).toBeVisible();
 
-  await page.locator(".entity-chip").filter({ hasText: "Ruth" }).first().click();
+  const ruthLink = page.getByRole("link", { name: /Open Ruth detail/ }).first();
+  await ruthLink.focus();
+  await expect(ruthLink).toBeFocused();
+  await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/ruth\/1\?node=ruth/);
   await expect(page.locator("#reader-detail")).toBeFocused();
   await expect(
@@ -35,20 +38,24 @@ test("reads Ruth, opens a detail panel, follows a relationship, and returns", as
   await expect(page).toHaveURL(/\/ruth\/1$/);
 
   await page.getByRole("radio", { name: "Text only" }).check();
+  await expect(page.locator(".scripture-link")).toHaveCount(0);
+  await expect(page.locator(".garden-note-link")).toHaveCount(0);
   await expect(page.locator(".entity-chip")).toHaveCount(0);
 });
 
-test("makes tapped verse chips visible on a mobile viewport", async ({ page }) => {
+test("opens inline verse links in a mobile sheet without losing place", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/ruth/1");
 
-  const chip = page
-    .locator(".entity-chip--place")
+  await expect(page.locator(".entity-chip")).toHaveCount(0);
+
+  const moabLink = page
+    .locator(".scripture-link--place")
     .filter({ hasText: /^Moab/ })
     .last();
-  await chip.scrollIntoViewIfNeeded();
+  await moabLink.scrollIntoViewIfNeeded();
   const scrollBeforeTap = await page.evaluate(() => window.scrollY);
-  await chip.click();
+  await moabLink.click();
 
   const detail = page.locator("#reader-detail");
   await expect(page).toHaveURL(/\/ruth\/1\?node=moab/);

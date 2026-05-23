@@ -133,9 +133,55 @@ async function hydrateAnchorsForPassages(ctx: { db: any }, passages: any[]) {
         _id: anchor._id,
         anchorKind: anchor.anchorKind,
         displayLabel: anchor.displayLabel,
+        readerSurface: anchor.readerSurface ?? "detail_only",
         displayOrder: anchor.displayOrder,
         startVerseKey: startVerse?.verseKey ?? null,
         endVerseKey: endVerse?.verseKey ?? null,
+        passage: publicPassage(passage),
+        node: publicNode(node),
+      };
+    }),
+  );
+
+  return hydrated
+    .filter(Boolean)
+    .sort((a: any, b: any) => a.displayOrder - b.displayOrder);
+}
+
+async function hydrateTextLinksForPassages(ctx: { db: any }, passages: any[]) {
+  const textLinks = (
+    await Promise.all(
+      passages.map((passage) =>
+        ctx.db
+          .query("nodeTextLinks")
+          .withIndex("by_passage", (q: any) => q.eq("passageId", passage._id))
+          .collect(),
+      ),
+    )
+  ).flat();
+
+  const hydrated = await Promise.all(
+    textLinks.map(async (textLink: any) => {
+      const [node, passage, verse] = await Promise.all([
+        getNode(textLink.nodeId, ctx),
+        getPassage(textLink.passageId, ctx),
+        ctx.db.get(textLink.verseId),
+      ]);
+
+      if (!node || !passage || !verse) {
+        return null;
+      }
+
+      return {
+        _id: textLink._id,
+        anchorKind: textLink.anchorKind,
+        displayLabel: textLink.displayLabel,
+        linkedText: textLink.linkedText,
+        startOffset: textLink.startOffset,
+        endOffset: textLink.endOffset,
+        contextLabel: textLink.contextLabel ?? null,
+        displayOrder: textLink.displayOrder,
+        verseKey: verse.verseKey,
         passage: publicPassage(passage),
         node: publicNode(node),
       };
@@ -213,7 +259,14 @@ export const getRuthChapter = query({
 
     const passages = await listChapterPassages(ctx, book._id, args.chapterNumber);
     const anchors = await hydrateAnchorsForPassages(ctx, passages);
-    const nodeIds = new Set(anchors.map((anchor: any) => anchor.node._id));
+    const textLinks = await hydrateTextLinksForPassages(ctx, passages);
+    const noteAnchors = anchors.filter(
+      (anchor: any) => anchor.readerSurface === "note",
+    );
+    const nodeIds = new Set([
+      ...anchors.map((anchor: any) => anchor.node._id),
+      ...textLinks.map((textLink: any) => textLink.node._id),
+    ]);
     const relationships = (
       await Promise.all(
         [...nodeIds].map((nodeId) =>
@@ -265,7 +318,8 @@ export const getRuthChapter = query({
         verseNumber: verse.verseNumber,
         text: verseTexts[index]?.text ?? "",
       })),
-      anchors,
+      anchors: noteAnchors,
+      textLinks,
       relationships: hydratedRelationships,
     };
   },

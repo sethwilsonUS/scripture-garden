@@ -15,6 +15,7 @@ import type * as scripture from "../scripture.js";
 import type * as seed from "../seed.js";
 import type * as seedData_ruthWeb from "../seedData/ruthWeb.js";
 import type * as semantic from "../semantic.js";
+import type * as textLinks from "../textLinks.js";
 
 import type {
   ApiFromModules,
@@ -30,6 +31,7 @@ declare const fullApi: ApiFromModules<{
   seed: typeof seed;
   "seedData/ruthWeb": typeof seedData_ruthWeb;
   semantic: typeof semantic;
+  textLinks: typeof textLinks;
 }>;
 
 /**

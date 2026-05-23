@@ -841,6 +841,21 @@
   margin: 0;
 }
 
+.scripture-link {
+  border-radius: 0.22rem;
+  color: var(--accent);
+  font-weight: 800;
+  text-decoration-line: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+
+.scripture-link:hover,
+.scripture-link:focus-visible {
+  background: var(--accent-bg);
+  color: var(--accent-hover);
+}
+
 .verse-number {
   display: inline-flex;
   align-items: center;
@@ -855,6 +870,7 @@
 }
 
 .verse-paths,
+.verse-notes,
 .detail-list {
   display: flex;
   flex-wrap: wrap;
@@ -862,6 +878,39 @@
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.verse-notes {
+  gap: 0.4rem;
+  padding-left: 2.25rem;
+}
+
+.garden-note-link {
+  display: inline-flex;
+  min-height: 2.5rem;
+  max-width: 100%;
+  align-items: center;
+  gap: 0.4rem;
+  border-left: 3px solid var(--accent-border);
+  border-radius: 0.5rem;
+  background: var(--surface-2);
+  color: var(--foreground);
+  padding: 0.35rem 0.65rem;
+  text-decoration: none;
+}
+
+.garden-note-link span {
+  color: var(--foreground);
+  font-size: 0.92rem;
+  font-weight: 850;
+  line-height: 1.25;
+}
+
+.garden-note-link small {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.2;
 }
 
 .entity-chip {

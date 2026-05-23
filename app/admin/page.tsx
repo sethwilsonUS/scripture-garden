@@ -5,6 +5,7 @@ import { getConvexAdminSecret } from "@/lib/admin/session";
 import {
   createAnchorAction,
   createNodeAction,
+  createNodeTextLinkAction,
   createRelationshipAction,
   decideRelationshipAction,
   logoutAction,
@@ -73,6 +74,31 @@ function TextField({
     <label className="form-field">
       <span className="form-field__label">{label}</span>
       <input className="input-field" name={name} required={required} />
+    </label>
+  );
+}
+
+function NumberField({
+  name,
+  label,
+  defaultValue,
+}: {
+  name: string;
+  label: string;
+  defaultValue?: number;
+}) {
+  return (
+    <label className="form-field">
+      <span className="form-field__label">{label}</span>
+      <input
+        className="input-field"
+        name={name}
+        type="number"
+        min="1"
+        step="1"
+        defaultValue={defaultValue}
+        required
+      />
     </label>
   );
 }
@@ -171,9 +197,41 @@ export default async function AdminPage() {
               label="Anchor kind"
               values={["primary", "mention", "context", "background"]}
             />
+            <Select
+              name="readerSurface"
+              label="Reader surface"
+              values={["detail_only", "note"]}
+            />
             <TextField name="displayLabel" label="Display label" />
             <button className="btn-primary" type="submit">
               Save anchor
+            </button>
+          </form>
+        </section>
+
+        <section className="garden-bed" aria-labelledby="text-link-title">
+          <h2 id="text-link-title" className="garden-card-title">
+            Create inline text link
+          </h2>
+          <form action={createNodeTextLinkAction} className="admin-form">
+            <TextField name="nodeSlug" label="Node slug" />
+            <TextField name="passageSlug" label="Passage slug" />
+            <TextField name="verseKey" label="Verse key" />
+            <TextField name="linkedText" label="Linked text" />
+            <NumberField
+              name="occurrenceNumber"
+              label="Occurrence number"
+              defaultValue={1}
+            />
+            <Select
+              name="anchorKind"
+              label="Anchor kind"
+              values={["primary", "mention", "context", "background"]}
+            />
+            <TextField name="displayLabel" label="Display label" />
+            <TextField name="contextLabel" label="Context label" required={false} />
+            <button className="btn-primary" type="submit">
+              Save inline link
             </button>
           </form>
         </section>

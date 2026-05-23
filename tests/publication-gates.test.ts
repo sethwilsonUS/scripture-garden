@@ -32,4 +32,14 @@ describe("publication gates", () => {
       }),
     ).toBe(false);
   });
+
+  it("keeps inline text links behind the same public node gate", () => {
+    const publicNode = { status: "published", isPublic: true };
+    const draftNode = { status: "draft", isPublic: true };
+    const privateNode = { status: "published", isPublic: false };
+
+    expect(isPublishedPublic(publicNode)).toBe(true);
+    expect(isPublishedPublic(draftNode)).toBe(false);
+    expect(isPublishedPublic(privateNode)).toBe(false);
+  });
 });

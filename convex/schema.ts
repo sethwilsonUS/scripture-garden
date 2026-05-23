@@ -7,6 +7,7 @@ import {
   editorialNoteType,
   evidenceClass,
   nodeType,
+  readerSurface,
   relationshipTypeKey,
   suggestionReviewStatus,
   translationStatus,
@@ -147,12 +148,30 @@ export default defineSchema({
     endVerseId: v.optional(v.id("verses")),
     anchorKind,
     displayLabel: v.string(),
+    readerSurface: v.optional(readerSurface),
     strength: v.optional(v.number()),
     displayOrder: v.number(),
   })
     .index("by_node", ["nodeId"])
     .index("by_passage", ["passageId"])
     .index("by_node_passage", ["nodeId", "passageId"]),
+
+  nodeTextLinks: defineTable({
+    nodeId: v.id("nodes"),
+    passageId: v.id("passages"),
+    verseId: v.id("verses"),
+    anchorKind,
+    displayLabel: v.string(),
+    linkedText: v.string(),
+    startOffset: v.number(),
+    endOffset: v.number(),
+    contextLabel: v.optional(v.string()),
+    displayOrder: v.number(),
+  })
+    .index("by_node", ["nodeId"])
+    .index("by_passage", ["passageId"])
+    .index("by_verse", ["verseId"])
+    .index("by_node_verse", ["nodeId", "verseId"]),
 
   relationships: defineTable({
     sourceNodeId: v.id("nodes"),

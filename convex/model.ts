@@ -37,6 +37,11 @@ export const anchorKind = v.union(
   v.literal("background"),
 );
 
+export const readerSurface = v.union(
+  v.literal("detail_only"),
+  v.literal("note"),
+);
+
 export const relationshipTypeKey = v.union(
   v.literal("appears_in"),
   v.literal("alias_of"),

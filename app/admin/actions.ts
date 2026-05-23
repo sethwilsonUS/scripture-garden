@@ -73,6 +73,25 @@ export async function createAnchorAction(formData: FormData) {
     passageSlug: requiredString(formData, "passageSlug"),
     anchorKind: requiredString(formData, "anchorKind") as never,
     displayLabel: requiredString(formData, "displayLabel"),
+    readerSurface: requiredString(formData, "readerSurface") as never,
+  });
+
+  revalidatePath("/admin");
+}
+
+export async function createNodeTextLinkAction(formData: FormData) {
+  const occurrenceValue = requiredString(formData, "occurrenceNumber");
+
+  await fetchMutation(api.admin.createNodeTextLink, {
+    adminSecret: getConvexAdminSecret(),
+    nodeSlug: requiredString(formData, "nodeSlug"),
+    passageSlug: requiredString(formData, "passageSlug"),
+    verseKey: requiredString(formData, "verseKey"),
+    linkedText: requiredString(formData, "linkedText"),
+    occurrenceNumber: Number(occurrenceValue),
+    anchorKind: requiredString(formData, "anchorKind") as never,
+    displayLabel: requiredString(formData, "displayLabel"),
+    contextLabel: (formData.get("contextLabel") as string | null)?.trim() || undefined,
   });
 
   revalidatePath("/admin");

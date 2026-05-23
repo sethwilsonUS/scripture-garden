@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAdminSecret } from "./model";
 import { ruthWebSeed } from "./seedData/ruthWeb";
+import { resolveLinkedTextOffsets } from "./textLinks";
 
 const RUTH_BOOK = {
   canonKey: "ruth",
@@ -182,6 +183,104 @@ const anchorSeeds = [
   ["matthew-genealogy-stub", "ruth-4-13-22", "background", "Ruth and Boaz named later", "ruth.4.17", "ruth.4.22", 20],
 ] as const;
 
+const textLinkSeeds = [
+  ["bethlehem", "ruth-1", "ruth.1.1", "Bethlehem Judah", 1, "primary", "Bethlehem Judah", undefined, 1010],
+  ["moab", "ruth-1", "ruth.1.1", "Moab", 1, "primary", "Moab", undefined, 1020],
+  ["naomi", "ruth-1", "ruth.1.2", "Naomi", 1, "primary", "Naomi", undefined, 1030],
+  ["bethlehem", "ruth-1", "ruth.1.2", "Bethlehem Judah", 1, "primary", "Bethlehem Judah", undefined, 1040],
+  ["moab", "ruth-1", "ruth.1.2", "Moab", 1, "primary", "Moab", undefined, 1050],
+  ["naomi", "ruth-1", "ruth.1.3", "Naomi", 1, "context", "Naomi", undefined, 1060],
+  ["moab", "ruth-1", "ruth.1.4", "Moab", 1, "primary", "Moab", undefined, 1070],
+  ["orpah", "ruth-1", "ruth.1.4", "Orpah", 1, "mention", "Orpah", undefined, 1080],
+  ["ruth", "ruth-1", "ruth.1.4", "Ruth", 1, "primary", "Ruth", undefined, 1090],
+  ["naomi", "ruth-1", "ruth.1.6", "she", 1, "context", "Naomi", "Naomi", 1100],
+  ["moab", "ruth-1", "ruth.1.6", "Moab", 1, "primary", "Moab", undefined, 1110],
+  ["moab", "ruth-1", "ruth.1.6", "Moab", 2, "context", "Moab", undefined, 1120],
+  ["naomi", "ruth-1", "ruth.1.8", "Naomi", 1, "primary", "Naomi", undefined, 1130],
+  ["naomi", "ruth-1", "ruth.1.11", "Naomi", 1, "primary", "Naomi", undefined, 1140],
+  ["orpah", "ruth-1", "ruth.1.14", "Orpah", 1, "mention", "Orpah", undefined, 1150],
+  ["naomi", "ruth-1", "ruth.1.14", "her", 2, "context", "Naomi", "Naomi", 1160],
+  ["ruth", "ruth-1", "ruth.1.14", "Ruth", 1, "primary", "Ruth", undefined, 1170],
+  ["ruth", "ruth-1", "ruth.1.16", "Ruth", 1, "primary", "Ruth", undefined, 1180],
+  ["naomi", "ruth-1", "ruth.1.18", "Naomi", 1, "primary", "Naomi", undefined, 1190],
+  ["bethlehem", "ruth-1", "ruth.1.19", "Bethlehem", 1, "primary", "Bethlehem", undefined, 1200],
+  ["naomi", "ruth-1", "ruth.1.19", "Naomi", 1, "primary", "Naomi", undefined, 1210],
+  ["naomi", "ruth-1", "ruth.1.20", "Naomi", 1, "primary", "Naomi", undefined, 1220],
+  ["naomi", "ruth-1", "ruth.1.21", "Naomi", 1, "primary", "Naomi", undefined, 1230],
+  ["naomi", "ruth-1", "ruth.1.22", "Naomi", 1, "primary", "Naomi", undefined, 1240],
+  ["ruth", "ruth-1", "ruth.1.22", "Ruth the Moabitess", 1, "primary", "Ruth the Moabitess", "Ruth", 1250],
+  ["moab", "ruth-1", "ruth.1.22", "Moab", 1, "primary", "Moab", undefined, 1260],
+  ["bethlehem", "ruth-1", "ruth.1.22", "Bethlehem", 1, "primary", "Bethlehem", undefined, 1270],
+  ["naomi", "ruth-2", "ruth.2.1", "Naomi", 1, "primary", "Naomi", undefined, 2010],
+  ["boaz", "ruth-2", "ruth.2.1", "Boaz", 1, "primary", "Boaz", undefined, 2020],
+  ["ruth", "ruth-2", "ruth.2.2", "Ruth the Moabitess", 1, "primary", "Ruth the Moabitess", "Ruth", 2030],
+  ["naomi", "ruth-2", "ruth.2.2", "Naomi", 1, "primary", "Naomi", undefined, 2040],
+  ["gleaning", "ruth-2", "ruth.2.2", "glean", 1, "primary", "glean", "Gleaning", 2050],
+  ["ruth", "ruth-2", "ruth.2.3", "She", 1, "context", "Ruth", "Ruth", 2060],
+  ["gleaning", "ruth-2", "ruth.2.3", "gleaned", 1, "primary", "gleaned", "Gleaning", 2070],
+  ["boaz", "ruth-2", "ruth.2.3", "Boaz", 1, "primary", "Boaz", undefined, 2080],
+  ["boaz", "ruth-2", "ruth.2.4", "Boaz", 1, "primary", "Boaz", undefined, 2090],
+  ["bethlehem", "ruth-2", "ruth.2.4", "Bethlehem", 1, "context", "Bethlehem", undefined, 2100],
+  ["boaz", "ruth-2", "ruth.2.5", "Boaz", 1, "primary", "Boaz", undefined, 2110],
+  ["ruth", "ruth-2", "ruth.2.6", "Moabite lady", 1, "context", "Moabite lady", "Ruth", 2120],
+  ["naomi", "ruth-2", "ruth.2.6", "Naomi", 1, "primary", "Naomi", undefined, 2130],
+  ["moab", "ruth-2", "ruth.2.6", "Moab", 1, "context", "Moab", undefined, 2140],
+  ["gleaning", "ruth-2", "ruth.2.7", "glean", 1, "primary", "glean", "Gleaning", 2150],
+  ["boaz", "ruth-2", "ruth.2.8", "Boaz", 1, "primary", "Boaz", undefined, 2160],
+  ["ruth", "ruth-2", "ruth.2.8", "Ruth", 1, "primary", "Ruth", undefined, 2170],
+  ["boaz", "ruth-2", "ruth.2.11", "Boaz", 1, "primary", "Boaz", undefined, 2180],
+  ["boaz", "ruth-2", "ruth.2.14", "Boaz", 1, "primary", "Boaz", undefined, 2190],
+  ["gleaning", "ruth-2", "ruth.2.15", "glean", 1, "primary", "glean", "Gleaning", 2200],
+  ["boaz", "ruth-2", "ruth.2.15", "Boaz", 1, "primary", "Boaz", undefined, 2210],
+  ["gleaning", "ruth-2", "ruth.2.17", "gleaned", 1, "primary", "gleaned", "Gleaning", 2220],
+  ["boaz", "ruth-2", "ruth.2.19", "Boaz", 1, "primary", "Boaz", undefined, 2230],
+  ["naomi", "ruth-2", "ruth.2.20", "Naomi", 1, "primary", "Naomi", undefined, 2240],
+  ["ruth", "ruth-2", "ruth.2.21", "Ruth the Moabitess", 1, "primary", "Ruth the Moabitess", "Ruth", 2250],
+  ["naomi", "ruth-2", "ruth.2.22", "Naomi", 1, "primary", "Naomi", undefined, 2260],
+  ["ruth", "ruth-2", "ruth.2.22", "Ruth", 1, "primary", "Ruth", undefined, 2270],
+  ["boaz", "ruth-2", "ruth.2.23", "Boaz", 1, "primary", "Boaz", undefined, 2280],
+  ["gleaning", "ruth-2", "ruth.2.23", "glean", 1, "primary", "glean", "Gleaning", 2290],
+  ["naomi", "ruth-3", "ruth.3.1", "Naomi", 1, "primary", "Naomi", undefined, 3010],
+  ["boaz", "ruth-3", "ruth.3.2", "Boaz", 1, "primary", "Boaz", undefined, 3020],
+  ["threshing-floor", "ruth-3", "ruth.3.2", "threshing floor", 1, "primary", "threshing floor", undefined, 3030],
+  ["threshing-floor", "ruth-3", "ruth.3.3", "threshing floor", 1, "primary", "threshing floor", undefined, 3040],
+  ["ruth", "ruth-3", "ruth.3.6", "She", 1, "context", "Ruth", "Ruth", 3050],
+  ["threshing-floor", "ruth-3", "ruth.3.6", "threshing floor", 1, "primary", "threshing floor", undefined, 3060],
+  ["boaz", "ruth-3", "ruth.3.7", "Boaz", 1, "primary", "Boaz", undefined, 3070],
+  ["ruth", "ruth-3", "ruth.3.7", "She", 1, "context", "Ruth", "Ruth", 3080],
+  ["ruth", "ruth-3", "ruth.3.9", "Ruth", 1, "primary", "Ruth", undefined, 3090],
+  ["redemption-custom", "ruth-3", "ruth.3.9", "near kinsman", 1, "context", "near kinsman", "Redemption custom", 3100],
+  ["redemption-custom", "ruth-3", "ruth.3.12", "near kinsman", 1, "context", "near kinsman", "Redemption custom", 3110],
+  ["redemption-custom", "ruth-3", "ruth.3.13", "kinsman", 1, "context", "kinsman", "Redemption custom", 3120],
+  ["threshing-floor", "ruth-3", "ruth.3.14", "threshing floor", 1, "primary", "threshing floor", undefined, 3130],
+  ["naomi", "ruth-3", "ruth.3.16", "mother-in-law", 1, "context", "mother-in-law", "Naomi", 3140],
+  ["boaz", "ruth-3", "ruth.3.18", "the man", 1, "context", "the man", "Boaz", 3150],
+  ["boaz", "ruth-4", "ruth.4.1", "Boaz", 1, "primary", "Boaz", undefined, 4010],
+  ["redemption-custom", "ruth-4", "ruth.4.1", "near kinsman", 1, "context", "near kinsman", "Redemption custom", 4020],
+  ["naomi", "ruth-4", "ruth.4.3", "Naomi", 1, "primary", "Naomi", undefined, 4030],
+  ["moab", "ruth-4", "ruth.4.3", "Moab", 1, "context", "Moab", undefined, 4040],
+  ["redemption-custom", "ruth-4", "ruth.4.4", "redeem", 1, "primary", "redeem", "Redemption custom", 4050],
+  ["boaz", "ruth-4", "ruth.4.5", "Boaz", 1, "primary", "Boaz", undefined, 4060],
+  ["naomi", "ruth-4", "ruth.4.5", "Naomi", 1, "primary", "Naomi", undefined, 4070],
+  ["ruth", "ruth-4", "ruth.4.5", "Ruth the Moabitess", 1, "primary", "Ruth the Moabitess", "Ruth", 4080],
+  ["redemption-custom", "ruth-4", "ruth.4.6", "redemption", 1, "primary", "redemption", "Redemption custom", 4090],
+  ["redemption-custom", "ruth-4", "ruth.4.7", "redeeming", 1, "primary", "redeeming", "Redemption custom", 4100],
+  ["boaz", "ruth-4", "ruth.4.8", "Boaz", 1, "primary", "Boaz", undefined, 4110],
+  ["boaz", "ruth-4", "ruth.4.9", "Boaz", 1, "primary", "Boaz", undefined, 4120],
+  ["naomi", "ruth-4", "ruth.4.9", "Naomi", 1, "primary", "Naomi", undefined, 4130],
+  ["ruth", "ruth-4", "ruth.4.10", "Ruth the Moabitess", 1, "primary", "Ruth the Moabitess", "Ruth", 4140],
+  ["bethlehem", "ruth-4", "ruth.4.11", "Bethlehem", 1, "primary", "Bethlehem", undefined, 4150],
+  ["boaz", "ruth-4", "ruth.4.13", "Boaz", 1, "primary", "Boaz", undefined, 4160],
+  ["ruth", "ruth-4", "ruth.4.13", "Ruth", 1, "primary", "Ruth", undefined, 4170],
+  ["naomi", "ruth-4", "ruth.4.14", "Naomi", 1, "primary", "Naomi", undefined, 4180],
+  ["redemption-custom", "ruth-4", "ruth.4.14", "near kinsman", 1, "context", "near kinsman", "Redemption custom", 4190],
+  ["naomi", "ruth-4", "ruth.4.16", "Naomi", 1, "primary", "Naomi", undefined, 4200],
+  ["naomi", "ruth-4", "ruth.4.17", "Naomi", 1, "primary", "Naomi", undefined, 4210],
+  ["david-lineage-stub", "ruth-4", "ruth.4.17", "David", 1, "background", "David", "Line toward David", 4220],
+  ["boaz", "ruth-4", "ruth.4.21", "Boaz", 1, "primary", "Boaz", undefined, 4230],
+  ["david-lineage-stub", "ruth-4", "ruth.4.22", "David", 1, "background", "David", "Line toward David", 4240],
+] as const;
+
 const relationshipSeeds = [
   ["ruth", "naomi", "associated_with", "textual", "clings to", "Ruth 1:16-17 directly records Ruth binding her path to Naomi.", "ruth-1-16-17", undefined, 10],
   ["ruth", "moab", "movement", "contextual", "comes from", "Ruth is repeatedly identified as the Moabitess who returns with Naomi.", "ruth-1-1-5", undefined, 20],
@@ -234,6 +333,25 @@ async function getNodeBySlug(ctx: { db: any }, slug: string) {
   return node;
 }
 
+async function getVerseTextForSeed(
+  ctx: { db: any },
+  verseId: string,
+  translationId: string,
+) {
+  const verseText = await ctx.db
+    .query("verseTexts")
+    .withIndex("by_verse_translation", (q: any) =>
+      q.eq("verseId", verseId).eq("translationId", translationId),
+    )
+    .first();
+
+  if (!verseText) {
+    throw new Error(`Missing verse text for ${verseId}`);
+  }
+
+  return verseText;
+}
+
 export const status = query({
   args: {},
   handler: async (ctx) => {
@@ -248,6 +366,7 @@ async function collectSeedStatus(ctx: { db: any }) {
   const verseTexts = await ctx.db.query("verseTexts").collect();
   const passages = await ctx.db.query("passages").collect();
   const nodes = await ctx.db.query("nodes").collect();
+  const nodeTextLinks = await ctx.db.query("nodeTextLinks").collect();
   const relationships = await ctx.db.query("relationships").collect();
   const approvals = await ctx.db.query("relationshipApprovals").collect();
 
@@ -258,6 +377,7 @@ async function collectSeedStatus(ctx: { db: any }) {
     verseTexts: verseTexts.length,
     passages: passages.length,
     nodes: nodes.length,
+    nodeTextLinks: nodeTextLinks.length,
     relationships: relationships.length,
     approvals: approvals.length,
   };
@@ -430,6 +550,14 @@ export const seedRuthMvp = mutation({
     ] of anchorSeeds) {
       const node = await getNodeBySlug(ctx, nodeSlug);
       const passage = await getPassageBySlug(ctx, passageSlug);
+      const surface = [
+        "return",
+        "gleaning-law-stub",
+        "david-lineage-stub",
+        "matthew-genealogy-stub",
+      ].includes(nodeSlug)
+        ? "note"
+        : "detail_only";
       const existing = await ctx.db
         .query("nodePassageAnchors")
         .withIndex("by_node_passage", (q: any) =>
@@ -445,6 +573,7 @@ export const seedRuthMvp = mutation({
           endVerseId: (await getVerseByKey(ctx, endVerseKey))._id,
           anchorKind: kind,
           displayLabel,
+          readerSurface: surface,
           strength: 4,
           displayOrder,
         });
@@ -455,8 +584,71 @@ export const seedRuthMvp = mutation({
           startVerseId: (await getVerseByKey(ctx, startVerseKey))._id,
           endVerseId: (await getVerseByKey(ctx, endVerseKey))._id,
           strength: 4,
+          readerSurface: surface,
           displayOrder,
         });
+      }
+    }
+
+    for (const [
+      nodeSlug,
+      passageSlug,
+      verseKey,
+      linkedText,
+      occurrenceNumber,
+      kind,
+      displayLabel,
+      contextLabel,
+      displayOrder,
+    ] of textLinkSeeds) {
+      const node = await getNodeBySlug(ctx, nodeSlug);
+      const passage = await getPassageBySlug(ctx, passageSlug);
+      const verse = await getVerseByKey(ctx, verseKey);
+      const verseText = await getVerseTextForSeed(
+        ctx,
+        verse._id,
+        translation!._id,
+      );
+      const offsets = resolveLinkedTextOffsets({
+        text: verseText.text,
+        linkedText,
+        occurrenceNumber,
+      });
+
+      if (!offsets) {
+        throw new Error(
+          `Could not seed text link "${linkedText}" occurrence ${occurrenceNumber} in ${verseKey}.`,
+        );
+      }
+
+      const existingLinks = await ctx.db
+        .query("nodeTextLinks")
+        .withIndex("by_node_verse", (q: any) =>
+          q.eq("nodeId", node._id).eq("verseId", verse._id),
+        )
+        .collect();
+      const existing = existingLinks.find(
+        (link: any) =>
+          link.startOffset === offsets.startOffset &&
+          link.endOffset === offsets.endOffset,
+      );
+      const nextTextLink = {
+        nodeId: node._id,
+        passageId: passage._id,
+        verseId: verse._id,
+        anchorKind: kind,
+        displayLabel,
+        linkedText,
+        startOffset: offsets.startOffset,
+        endOffset: offsets.endOffset,
+        contextLabel,
+        displayOrder,
+      };
+
+      if (!existing) {
+        await ctx.db.insert("nodeTextLinks", nextTextLink);
+      } else {
+        await ctx.db.patch(existing._id, nextTextLink);
       }
     }
 
