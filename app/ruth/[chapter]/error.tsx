@@ -10,8 +10,8 @@ export default function RuthChapterError({
       <div>
         <h1 className="alert-banner__title">This chapter could not load.</h1>
         <p className="alert-banner__body">
-          The public reader could not reach the Ruth corpus or semantic layer.
-          Nothing internal has been exposed.
+          The garden could not gather this chapter just now. Try again when you
+          are ready.
         </p>
         <button className="btn-secondary" type="button" onClick={() => reset()}>
           Try again

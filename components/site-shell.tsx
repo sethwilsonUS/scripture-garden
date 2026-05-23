@@ -5,7 +5,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 const navItems = [
   { href: "/ruth", label: "Ruth" },
   { href: "/ruth/1", label: "Read" },
-  { href: "/admin", label: "Workbench" },
+  { href: "/admin", label: "Gardeners" },
 ];
 
 export function SiteShell({ children }: { children: React.ReactNode }) {
@@ -46,12 +46,11 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
         <div className="site-footer__inner">
           <div className="site-footer__brand">
             <BookOpenText aria-hidden="true" className="size-4" />
-            <span>Ruth-first, editorially approved, small on purpose.</span>
+            <span>A quiet place to read Ruth slowly.</span>
           </div>
           <p>
             Scripture text is from the World English Bible, public domain,
-            imported from eBible.org. No public AI, generic search, or
-            whole-Bible graph is active here.
+            imported from eBible.org.
           </p>
         </div>
       </footer>

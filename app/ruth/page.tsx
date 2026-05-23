@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Ruth",
-  description: "Begin reading Ruth in the World English Bible.",
+  description: "Read Ruth in the World English Bible and follow gentle paths through the story.",
 };
 
 export default async function RuthOverviewPage() {
@@ -18,11 +18,10 @@ export default async function RuthOverviewPage() {
   if (!overview) {
     return (
       <section className="garden-bed" role="status">
-        <p className="eyebrow">Ruth corpus</p>
-        <h1 className="section-heading">Ruth is not seeded yet.</h1>
+        <p className="eyebrow">Ruth</p>
+        <h1 className="section-heading">The garden bed is still being planted.</h1>
         <p className="section-copy">
-          The reader shell is ready, but the Convex corpus needs the Ruth WEB
-          seed before public reading can begin.
+          The reader is ready, but the Ruth text has not arrived yet.
         </p>
       </section>
     );
@@ -33,14 +32,14 @@ export default async function RuthOverviewPage() {
       <TrackEvent eventName="ruth_entry" pageSlug="ruth" />
       <section className="ruth-overview" aria-labelledby="ruth-title">
         <div>
-          <p className="eyebrow">Ruth-first reader</p>
+          <p className="eyebrow">Book of Ruth</p>
           <h1 id="ruth-title" className="hero-title">
             Begin in Ruth.
           </h1>
           <p className="hero-lede">
-            Read the World English Bible text and open a small set of
-            human-approved paths as the story moves from famine to harvest, from
-            grief to provision, and from Bethlehem toward a larger family line.
+            Read the World English Bible text and open quiet paths as the story
+            moves from famine to harvest, from grief to provision, and from
+            Bethlehem toward a larger family line.
           </p>
           <div className="hero-actions">
             <Link href="/ruth/1" className="btn-primary">
@@ -54,8 +53,8 @@ export default async function RuthOverviewPage() {
           <p className="eyebrow">Source text</p>
           <h2 className="garden-card-title">{overview.translation.name}</h2>
           <p className="garden-card-body">
-            {overview.translation.licenseNote} Scripture text remains separate
-            from semantic overlays.
+            {overview.translation.licenseNote} Scripture Garden keeps the text
+            in view and lets the side paths stay secondary.
           </p>
         </div>
       </section>

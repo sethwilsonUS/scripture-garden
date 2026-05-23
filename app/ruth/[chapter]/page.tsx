@@ -19,7 +19,7 @@ export async function generateMetadata({
   const { chapter } = await params;
   return {
     title: `Ruth ${chapter}`,
-    description: `Read Ruth ${chapter} in the World English Bible with curated Scripture Garden paths.`,
+    description: `Read Ruth ${chapter} in the World English Bible with gentle Scripture Garden paths.`,
   };
 }
 

@@ -34,7 +34,7 @@ test("reads Ruth, opens a detail panel, follows a relationship, and returns", as
     .click();
   await expect(page).toHaveURL(/\/ruth\/1$/);
 
-  await page.getByRole("radio", { name: "hidden" }).check();
+  await page.getByRole("radio", { name: "Text only" }).check();
   await expect(page.locator(".entity-chip")).toHaveCount(0);
 });
 

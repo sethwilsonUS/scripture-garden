@@ -13,6 +13,12 @@ import type {
 
 type OverlayDensity = "focused" | "full" | "hidden";
 
+const densityOptions = [
+  { value: "focused", label: "Quiet" },
+  { value: "full", label: "All paths" },
+  { value: "hidden", label: "Text only" },
+] as const;
+
 function verseNumberFromKey(verseKey: string | null) {
   if (!verseKey) {
     return null;
@@ -105,26 +111,26 @@ export function ReaderChapter({
               Ruth {data.chapter.number}
             </h1>
             <p className="reader-lede">
-              Read the chapter, then follow a few approved paths through people,
-              places, practices, and bounded stubs.
+              Read the chapter, then open a few paths through people, places,
+              practices, and echoes in the story.
             </p>
           </div>
 
           <fieldset className="overlay-control">
-            <legend>Semantic paths</legend>
-            {(["focused", "full", "hidden"] as const).map((value) => (
-              <label key={value}>
+            <legend>Garden paths</legend>
+            {densityOptions.map((option) => (
+              <label key={option.value}>
                 <input
                   type="radio"
                   name="overlay-density"
-                  value={value}
-                  checked={density === value}
+                  value={option.value}
+                  checked={density === option.value}
                   onChange={() => {
-                    setDensity(value);
-                    recordOverlayChange(value, data.chapter.number);
+                    setDensity(option.value);
+                    recordOverlayChange(option.value, data.chapter.number);
                   }}
                 />
-                <span>{value}</span>
+                <span>{option.label}</span>
               </label>
             ))}
           </fieldset>
@@ -167,7 +173,7 @@ export function ReaderChapter({
                 </p>
 
                 {anchors.length > 0 ? (
-                  <ul className="verse-paths" aria-label={`Curated paths from ${verse.osisRef}`}>
+                  <ul className="verse-paths" aria-label={`Garden paths from ${verse.osisRef}`}>
                     {anchors.map((anchor) => (
                       <li key={anchor._id}>
                         <Link
@@ -217,11 +223,11 @@ export function ReaderChapter({
       ) : (
         <aside className="reader-detail reader-detail--empty" aria-labelledby="paths-title">
           <h2 id="paths-title" className="reader-detail__title">
-            Paths are ready when you are.
+            Paths are waiting nearby.
           </h2>
           <p className="reader-detail__summary">
-            Choose a chip in the text to open a curated, human-approved doorway
-            without losing your place in Ruth.
+            Choose a marker in the text to open a small note without losing
+            your place in Ruth.
           </p>
         </aside>
       )}

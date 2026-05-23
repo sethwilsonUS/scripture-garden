@@ -14,10 +14,10 @@ const RUTH_BOOK = {
 };
 
 const chapterPassages = [
-  ["ruth-1", "Ruth 1", "Ruth, Naomi, and Orpah move through loss and return.", 1, 1, 22],
-  ["ruth-2", "Ruth 2", "Ruth gleans in Boaz's field and is met with protection.", 2, 1, 23],
-  ["ruth-3", "Ruth 3", "Naomi sends Ruth to the threshing floor with a careful request.", 3, 1, 18],
-  ["ruth-4", "Ruth 4", "Boaz redeems the family line, and Ruth's story opens toward David.", 4, 1, 22],
+  ["ruth-1", "Ruth 1", "Loss, loyalty, and the long road back to Bethlehem.", 1, 1, 22],
+  ["ruth-2", "Ruth 2", "Ruth enters the fields and finds unexpected kindness.", 2, 1, 23],
+  ["ruth-3", "Ruth 3", "A nighttime request rests on courage, wisdom, and care.", 3, 1, 18],
+  ["ruth-4", "Ruth 4", "A public act of redemption opens toward a larger family story.", 4, 1, 22],
 ] as const;
 
 const sectionPassages = [
@@ -127,10 +127,10 @@ const nodeSeeds = [
     displayName: "Gleaning Laws",
     shortLabel: "Gleaning laws",
     summary:
-      "A bounded doorway to the Torah background for leaving harvest edges for the vulnerable.",
+      "A nearby reference for the law that leaves harvest edges for vulnerable neighbors.",
     externalReference: "Leviticus 19:9-10; Deuteronomy 24:19-22",
     boundaryNote:
-      "This is outside fully curated Ruth territory and is included only as a reference-first stub.",
+      "This path steps outside Ruth for a moment so the field scene has a little more light around it.",
     displayOrder: 110,
   },
   {
@@ -139,10 +139,10 @@ const nodeSeeds = [
     displayName: "Line Toward David",
     shortLabel: "Line toward David",
     summary:
-      "A bounded doorway to the genealogy at the end of Ruth that points toward David.",
+      "A nearby reference for the genealogy at the end of Ruth that points toward David.",
     externalReference: "Ruth 4:17-22",
     boundaryNote:
-      "This stub stays tied to Ruth's closing genealogy rather than opening a whole-Bible lineage graph.",
+      "This path stays close to Ruth's closing genealogy and does not try to follow every later branch.",
     displayOrder: 120,
   },
   {
@@ -151,10 +151,10 @@ const nodeSeeds = [
     displayName: "Matthew's Genealogy",
     shortLabel: "Matthew 1",
     summary:
-      "A bounded doorway to the later genealogy where Ruth and Boaz are named in Matthew 1.",
+      "A nearby reference for the later genealogy where Ruth and Boaz are named in Matthew 1.",
     externalReference: "Matthew 1:5-6",
     boundaryNote:
-      "This cross-book stub is reference-first and does not imply curated coverage of Matthew.",
+      "This path only points to the later mention; the garden is still rooted here in Ruth.",
     displayOrder: 130,
   },
 ] as const;
@@ -188,11 +188,11 @@ const relationshipSeeds = [
   ["naomi", "bethlehem", "movement", "contextual", "returns to", "Naomi returns to Bethlehem as the barley harvest begins.", "ruth-1", undefined, 30],
   ["ruth", "boaz", "associated_with", "contextual", "meets in the field of", "Ruth 2 brings Ruth into Boaz's field and protection.", "ruth-2-1-13", undefined, 40],
   ["ruth", "gleaning", "associated_with", "contextual", "seeks provision through", "Ruth asks to glean among the ears of grain in Ruth 2.", "ruth-2-1-13", undefined, 50],
-  ["gleaning", "gleaning-law-stub", "cross_book_stub_link", "editorial", "opens the law behind gleaning", "This editorial doorway keeps Ruth's field scene tied to its Torah background without expanding into a full law index.", "ruth-2-1-13", undefined, 60],
-  ["ruth", "threshing-floor", "associated_with", "contextual", "goes to", "Ruth 3 places Ruth at the threshing floor for a carefully bounded request.", "ruth-3-1-13", undefined, 70],
+  ["gleaning", "gleaning-law-stub", "cross_book_stub_link", "editorial", "has a law in the background", "Ruth's field scene carries echoes of harvest laws that leave room for the poor and the foreigner.", "ruth-2-1-13", undefined, 60],
+  ["ruth", "threshing-floor", "associated_with", "contextual", "goes to", "Ruth 3 places Ruth at the threshing floor for a careful request.", "ruth-3-1-13", undefined, 70],
   ["boaz", "redemption-custom", "associated_with", "textual", "acts as redeemer through", "Ruth 4 explicitly shows Boaz taking up the redeemer role at the gate.", "ruth-4-1-12", undefined, 80],
   ["redemption-custom", "david-lineage-stub", "cross_book_stub_link", "editorial", "opens toward David's line", "Ruth 4's redemption scene leads directly into the genealogy ending with David.", "ruth-4-13-22", undefined, 90],
-  ["david-lineage-stub", "matthew-genealogy-stub", "cross_book_stub_link", "editorial", "is echoed in", "Matthew 1 later names Boaz and Ruth in a genealogy; this is a bounded reference, not curated Matthew coverage.", "ruth-4-13-22", undefined, 100],
+  ["david-lineage-stub", "matthew-genealogy-stub", "cross_book_stub_link", "editorial", "is echoed in", "Matthew 1 later names Boaz and Ruth in a genealogy.", "ruth-4-13-22", undefined, 100],
   ["boaz", "bethlehem", "located_in", "textual", "acts in", "Boaz's public redemption occurs in Bethlehem's gate scene.", "ruth-4-1-12", undefined, 110],
   ["ruth", "return", "thematic_resonance", "editorial", "embodies return with loyalty", "The repeated language of returning in Ruth 1 is given a human center in Ruth's decision to stay with Naomi.", "ruth-1", undefined, 120],
 ] as const;
@@ -354,6 +354,12 @@ export const seedRuthMvp = mutation({
     ]) {
       const existing = await getByIndex(ctx, "passages", "by_slug", "slug", slug);
       if (existing) {
+        await ctx.db.patch(existing._id, {
+          title,
+          summary,
+          sortOrder: passageOrder,
+        });
+        passageOrder += 10;
         continue;
       }
 
@@ -386,6 +392,12 @@ export const seedRuthMvp = mutation({
           createdByAdminUserId: adminUser!._id,
         });
         node = await ctx.db.get(nodeId);
+      } else {
+        await ctx.db.patch(node._id, {
+          ...seedNode,
+          updatedAt: now,
+        });
+        node = await ctx.db.get(node._id);
       }
 
       const primaryAlias = await ctx.db
@@ -436,6 +448,15 @@ export const seedRuthMvp = mutation({
           strength: 4,
           displayOrder,
         });
+      } else {
+        await ctx.db.patch(existing._id, {
+          anchorKind: kind,
+          displayLabel,
+          startVerseId: (await getVerseByKey(ctx, startVerseKey))._id,
+          endVerseId: (await getVerseByKey(ctx, endVerseKey))._id,
+          strength: 4,
+          displayOrder,
+        });
       }
     }
 
@@ -464,6 +485,25 @@ export const seedRuthMvp = mutation({
         .first();
 
       if (existing) {
+        await ctx.db.patch(existing._id, {
+          evidenceClass: evidence,
+          publicLabel: label,
+          rationale,
+          sourcePassageId: sourcePassageSlug
+            ? (await getPassageBySlug(ctx, sourcePassageSlug))._id
+            : undefined,
+          targetPassageId: targetPassageSlug
+            ? (await getPassageBySlug(ctx, targetPassageSlug))._id
+            : undefined,
+          updatedAt: now,
+          displayOrder,
+        });
+
+        if (existing.currentApprovalId) {
+          await ctx.db.patch(existing.currentApprovalId, {
+            evidenceSummary: rationale,
+          });
+        }
         continue;
       }
 

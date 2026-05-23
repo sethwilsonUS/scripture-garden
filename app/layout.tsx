@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     template: "%s | Scripture Garden",
   },
   description:
-    "A Ruth-first semantic Scripture exploration environment built for calm, accessible traversal.",
+    "A quiet Bible garden for reading Ruth and following gentle paths through the story.",
   applicationName: "Scripture Garden",
   authors: [{ name: "Seth Wilson" }],
   metadataBase: new URL("https://scripture-garden-liard.vercel.app"),

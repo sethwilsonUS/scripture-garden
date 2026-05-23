@@ -10,8 +10,8 @@ export default function RuthOverviewError({
       <div>
         <h1 className="alert-banner__title">Ruth could not load.</h1>
         <p className="alert-banner__body">
-          The reader stayed inside the Ruth-first boundary, but the public
-          corpus request failed. Try again when you are ready.
+          The garden could not gather the text just now. Try again when you are
+          ready.
         </p>
         <button className="btn-secondary" type="button" onClick={() => reset()}>
           Try again

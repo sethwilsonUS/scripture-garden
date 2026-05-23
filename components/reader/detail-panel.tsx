@@ -167,7 +167,7 @@ export function DetailPanel({
         />
 
         <div className="reader-detail__topline">
-          <p className="eyebrow">{isStub ? "Bounded stub" : detail.node.nodeType.replace("_", " ")}</p>
+          <p className="eyebrow">{isStub ? "Nearby reference" : detail.node.nodeType.replace("_", " ")}</p>
           <Link
             href={closeHref}
             className="icon-button"
@@ -194,7 +194,7 @@ export function DetailPanel({
 
         {detail.node.boundaryNote ? (
           <div className="boundary-note" role="note">
-            <strong>Crossing the Ruth boundary</strong>
+            <strong>Looking just beyond Ruth</strong>
             <p>{detail.node.boundaryNote}</p>
           </div>
         ) : null}
@@ -224,7 +224,7 @@ export function DetailPanel({
 
         <section aria-labelledby="detail-paths-title" className="detail-stack">
           <h3 id="detail-paths-title" className="detail-section-title">
-            Approved paths from here
+            Paths from here
           </h3>
           <ul className="detail-list">
             {detail.relationships.map((relationship) => {
