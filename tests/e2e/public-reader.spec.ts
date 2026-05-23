@@ -42,13 +42,30 @@ test("makes tapped verse chips visible on a mobile viewport", async ({ page }) =
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/ruth/1");
 
-  await page.locator(".entity-chip").filter({ hasText: "Moab" }).first().click();
+  const chip = page
+    .locator(".entity-chip--place")
+    .filter({ hasText: /^Moab/ })
+    .last();
+  await chip.scrollIntoViewIfNeeded();
+  const scrollBeforeTap = await page.evaluate(() => window.scrollY);
+  await chip.click();
 
   const detail = page.locator("#reader-detail");
   await expect(page).toHaveURL(/\/ruth\/1\?node=moab/);
+  await expect(
+    page.getByRole("dialog", { name: "Moab" }),
+  ).toBeVisible();
   await expect(detail).toBeFocused();
   await expect(detail).toBeInViewport({ ratio: 0.5 });
   await expect(
     page.getByRole("heading", { name: "Moab", exact: true }),
   ).toBeVisible();
+  await expect
+    .poll(async () =>
+      Math.abs((await page.evaluate(() => window.scrollY)) - scrollBeforeTap),
+    )
+    .toBeLessThan(40);
+
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/ruth\/1$/);
 });
