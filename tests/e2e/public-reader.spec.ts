@@ -37,3 +37,18 @@ test("reads Ruth, opens a detail panel, follows a relationship, and returns", as
   await page.getByRole("radio", { name: "hidden" }).check();
   await expect(page.locator(".entity-chip")).toHaveCount(0);
 });
+
+test("makes tapped verse chips visible on a mobile viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/ruth/1");
+
+  await page.locator(".entity-chip").filter({ hasText: "Moab" }).first().click();
+
+  const detail = page.locator("#reader-detail");
+  await expect(page).toHaveURL(/\/ruth\/1\?node=moab/);
+  await expect(detail).toBeFocused();
+  await expect(detail).toBeInViewport({ ratio: 0.5 });
+  await expect(
+    page.getByRole("heading", { name: "Moab", exact: true }),
+  ).toBeVisible();
+});

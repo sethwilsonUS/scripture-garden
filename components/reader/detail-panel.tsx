@@ -41,7 +41,7 @@ export function DetailPanel({
     <aside
       ref={panelRef}
       id="reader-detail"
-      className="reader-detail"
+      className="reader-detail reader-detail--selected"
       aria-labelledby="reader-detail-title"
       tabIndex={-1}
     >

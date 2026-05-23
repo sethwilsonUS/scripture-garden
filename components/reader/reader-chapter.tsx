@@ -173,7 +173,6 @@ export function ReaderChapter({
                         <Link
                           href={`/ruth/${data.chapter.number}?node=${anchor.node.slug}#reader-detail`}
                           className={`entity-chip entity-chip--${anchor.node.nodeType}`}
-                          scroll={false}
                         >
                           <span>{anchor.node.shortLabel}</span>
                           <small>{anchor.displayLabel}</small>

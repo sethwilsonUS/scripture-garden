@@ -909,6 +909,7 @@
   background: var(--surface-2);
   padding: 1rem;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.01);
+  scroll-margin-top: 5.5rem;
 }
 
 .reader-detail--empty {
@@ -1235,6 +1236,11 @@
   .reader-detail {
     position: static;
     max-height: none;
+  }
+
+  .reader-detail--selected {
+    order: -1;
+    scroll-margin-top: 8.5rem;
   }
 }
 
