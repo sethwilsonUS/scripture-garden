@@ -199,7 +199,7 @@ const textLinkSeeds = [
   ["naomi", "ruth-1", "ruth.1.8", "Naomi", 1, "primary", "Naomi", undefined, 1130],
   ["naomi", "ruth-1", "ruth.1.11", "Naomi", 1, "primary", "Naomi", undefined, 1140],
   ["orpah", "ruth-1", "ruth.1.14", "Orpah", 1, "mention", "Orpah", undefined, 1150],
-  ["naomi", "ruth-1", "ruth.1.14", "her", 2, "context", "Naomi", "Naomi", 1160],
+  ["naomi", "ruth-1", "ruth.1.14", "her", 3, "context", "Naomi", "Naomi", 1160],
   ["ruth", "ruth-1", "ruth.1.14", "Ruth", 1, "primary", "Ruth", undefined, 1170],
   ["ruth", "ruth-1", "ruth.1.16", "Ruth", 1, "primary", "Ruth", undefined, 1180],
   ["naomi", "ruth-1", "ruth.1.18", "Naomi", 1, "primary", "Naomi", undefined, 1190],
@@ -627,11 +627,13 @@ export const seedRuthMvp = mutation({
           q.eq("nodeId", node._id).eq("verseId", verse._id),
         )
         .collect();
-      const existing = existingLinks.find(
-        (link: any) =>
-          link.startOffset === offsets.startOffset &&
-          link.endOffset === offsets.endOffset,
-      );
+      const existing =
+        existingLinks.find((link: any) => link.displayOrder === displayOrder) ??
+        existingLinks.find(
+          (link: any) =>
+            link.startOffset === offsets.startOffset &&
+            link.endOffset === offsets.endOffset,
+        );
       const nextTextLink = {
         nodeId: node._id,
         passageId: passage._id,
